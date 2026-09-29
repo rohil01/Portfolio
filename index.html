@@ -243,7 +243,31 @@ nav {
   font-weight: 400;
   color: var(--muted);
 }
-.hero h1 .role span { color: var(--accent); font-style: normal; font-family: var(--font-head); }
+.hero h1 .role-accent { color: var(--accent); font-style: normal; font-family: var(--font-head); }
+.role-caret {
+  display: inline-block;
+  width: 3px;
+  height: 0.82em;
+  margin-left: 0.08em;
+  background: var(--accent);
+  vertical-align: -0.08em;
+  opacity: 0;
+}
+.role-caret--live { animation: caretBlink 1.05s steps(2, start) infinite; }
+.role-caret--done { animation: none; opacity: 0; transition: opacity 0.6s ease; }
+@keyframes caretBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .role-caret { display: none; }
+}
 .hero-sub {
   font-size: 1rem;
   color: var(--muted);
@@ -775,7 +799,7 @@ footer {
       <div class="hero-tag">Open to AI / Agentic Engineering roles</div>
       <h1>
         <span class="name">Rohil Chaturvedi</span>
-        <span class="role"><span>AI</span> / Agentic Engineer</span>
+        <span class="role" id="heroRole"><span class="sr-only">AI / Agentic Engineer</span><span class="role-accent" aria-hidden="true">AI</span><span class="role-rest" aria-hidden="true"> / Agentic Engineer</span><span class="role-caret" aria-hidden="true"></span></span>
       </h1>
       <p class="hero-sub">
         I design and ship <strong>production-grade agentic systems</strong> — RAG pipelines, multi-agent
@@ -795,21 +819,21 @@ footer {
       <div class="stat-card reveal">
         <div class="stat-icon purple">🤖</div>
         <div>
-          <div class="stat-num purple">40%</div>
+          <div class="stat-num purple" data-count="40" data-suffix="%">40%</div>
           <div class="stat-label">Precision boost in RAG retrieval</div>
         </div>
       </div>
       <div class="stat-card reveal">
         <div class="stat-icon teal">⚡</div>
         <div>
-          <div class="stat-num teal">&lt;200ms</div>
+          <div class="stat-num teal" data-count="200" data-prefix="<" data-suffix="ms">&lt;200ms</div>
           <div class="stat-label">API latency in production agents</div>
         </div>
       </div>
       <div class="stat-card reveal">
         <div class="stat-icon orange">📉</div>
         <div>
-          <div class="stat-num orange">30%</div>
+          <div class="stat-num orange" data-count="30" data-suffix="%">30%</div>
           <div class="stat-label">Reduction in manual processing time</div>
         </div>
       </div>
@@ -1159,6 +1183,74 @@ footer {
     hamburger.classList.remove('open');
     mobileMenu.classList.remove('open');
   }
+
+  // Hero role typewriter — types the role line once, then the caret fades.
+  // The full text stays in the HTML, so no-JS and reduced-motion users see it
+  // immediately (the sr-only copy keeps screen readers on the real label).
+  (function () {
+    const role = document.getElementById('heroRole');
+    if (!role) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const accent = role.querySelector('.role-accent');
+    const rest = role.querySelector('.role-rest');
+    const caret = role.querySelector('.role-caret');
+    const segments = [
+      { el: accent, text: 'AI' },
+      { el: rest, text: ' / Agentic Engineer' },
+    ];
+    accent.textContent = '';
+    rest.textContent = '';
+    caret.classList.add('role-caret--live');
+    let si = 0, ci = 0;
+    function tick() {
+      if (si >= segments.length) {
+        setTimeout(() => {
+          caret.classList.remove('role-caret--live');
+          caret.classList.add('role-caret--done');
+        }, 2400);
+        return;
+      }
+      const seg = segments[si];
+      if (ci < seg.text.length) {
+        seg.el.textContent += seg.text[ci++];
+        setTimeout(tick, 46 + Math.random() * 44);
+      } else {
+        si++; ci = 0;
+        tick();
+      }
+    }
+    setTimeout(tick, 450);
+  })();
+
+  // Stat counters count up from zero when their card scrolls into view.
+  (function () {
+    const nums = document.querySelectorAll('.stat-num[data-count]');
+    if (!nums.length) return;
+    const render = (el, value) => {
+      el.textContent = (el.dataset.prefix || '') + Math.round(value) + (el.dataset.suffix || '');
+    };
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    // Zero them out pre-paint so the final value never flashes first.
+    nums.forEach((el) => render(el, 0));
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        io.unobserve(entry.target);
+        const el = entry.target;
+        const target = parseFloat(el.dataset.count);
+        const duration = 1300;
+        const start = performance.now();
+        function frame(now) {
+          const t = Math.min(1, (now - start) / duration);
+          render(el, target * (1 - Math.pow(1 - t, 3)));  // ease-out cubic
+          if (t < 1) requestAnimationFrame(frame);
+          else render(el, target);
+        }
+        requestAnimationFrame(frame);
+      });
+    }, { threshold: 0.5 });
+    nums.forEach((el) => io.observe(el));
+  })();
 </script>
 </body>
 </html>
