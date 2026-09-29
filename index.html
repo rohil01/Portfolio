@@ -9,6 +9,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;1,300&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+::selection { background: rgba(124,109,250,0.45); color: #fff; }
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--bg3); border-radius: 5px; border: 2px solid var(--bg); }
+::-webkit-scrollbar-thumb:hover { background: rgba(124,109,250,0.5); }
 :root {
   --bg: #0a0a0f;
   --bg2: #111118;
@@ -24,6 +29,9 @@
   --font-mono: 'DM Mono', monospace;
   --font-serif: 'Instrument Serif', serif;
   --max-width: 1080px;
+  --glow: rgba(124,109,250,0.35);
+  --glow-soft: rgba(124,109,250,0.12);
+  --glow-teal: rgba(45,212,191,0.25);
 }
 html { scroll-behavior: smooth; }
 body {
@@ -35,14 +43,39 @@ body {
   line-height: 1.6;
   overflow-x: hidden;
 }
+body::before, body::after {
+  content: '';
+  position: fixed;
+  z-index: -1;
+  border-radius: 50%;
+  filter: blur(90px);
+  pointer-events: none;
+}
+body::before {
+  top: -180px; left: -120px;
+  width: 520px; height: 520px;
+  background: radial-gradient(circle, rgba(124,109,250,0.14), transparent 65%);
+  animation: drift 18s ease-in-out infinite alternate;
+}
+body::after {
+  bottom: -220px; right: -140px;
+  width: 560px; height: 560px;
+  background: radial-gradient(circle, rgba(45,212,191,0.1), transparent 65%);
+  animation: drift 22s ease-in-out infinite alternate-reverse;
+}
+@keyframes drift {
+  from { transform: translate(0, 0) scale(1); }
+  to { transform: translate(60px, 40px) scale(1.15); }
+}
 
 /* NAV */
 nav {
   position: fixed;
   top: 0; left: 0; right: 0;
   z-index: 100;
-  background: rgba(10,10,15,0.85);
-  backdrop-filter: blur(12px);
+  background: rgba(10,10,15,0.72);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
   border-bottom: 0.5px solid var(--border);
 }
 .nav-inner {
@@ -71,7 +104,17 @@ nav {
   text-decoration: none;
   transition: color 0.2s;
 }
+.nav-links a { position: relative; }
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  left: 0; bottom: -4px;
+  width: 0; height: 1px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  transition: width 0.25s;
+}
 .nav-links a:hover { color: var(--text); }
+.nav-links a:hover::after { width: 100%; }
 
 /* HAMBURGER */
 .nav-hamburger {
@@ -182,7 +225,16 @@ nav {
   letter-spacing: -0.03em;
   margin-bottom: 1.5rem;
 }
-.hero h1 .name { display: block; }
+.hero h1 .name {
+  display: block;
+  background: linear-gradient(92deg, #f0eee8 20%, #a99dfc 45%, #5eead4 65%, #f0eee8 90%);
+  background-size: 220% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: nameShine 9s linear infinite;
+}
+@keyframes nameShine { to { background-position: 220% center; } }
 .hero h1 .role {
   display: block;
   font-style: italic;
@@ -217,17 +269,21 @@ nav {
   cursor: pointer;
 }
 .btn-primary {
-  background: var(--accent);
+  background: linear-gradient(135deg, #8b7bff, #6b5cf0 55%, #5a4ae0);
   color: #fff;
   border: none;
+  box-shadow: 0 4px 18px var(--glow-soft);
 }
-.btn-primary:hover { background: #6b5cf0; transform: translateY(-1px); }
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px var(--glow);
+}
 .btn-ghost {
   background: transparent;
   color: var(--text);
   border: 0.5px solid var(--border2);
 }
-.btn-ghost:hover { background: var(--bg3); border-color: var(--border2); }
+.btn-ghost:hover { background: var(--bg3); border-color: rgba(124,109,250,0.5); transform: translateY(-2px); }
 
 /* HERO RIGHT — stats */
 .hero-right {
@@ -238,16 +294,20 @@ nav {
   z-index: 1;
 }
 .stat-card {
-  background: var(--bg2);
+  background: linear-gradient(150deg, var(--bg2), rgba(26,26,36,0.55));
   border: 0.5px solid var(--border);
   border-radius: 1rem;
   padding: 1.25rem 1.5rem;
   display: flex;
   align-items: center;
   gap: 1.25rem;
-  transition: border-color 0.2s;
+  transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
 }
-.stat-card:hover { border-color: var(--border2); }
+.stat-card:hover {
+  border-color: var(--border2);
+  transform: translateY(-3px);
+  box-shadow: 0 14px 40px rgba(0,0,0,0.35);
+}
 .stat-icon {
   width: 44px; height: 44px;
   border-radius: 0.625rem;
@@ -320,7 +380,10 @@ section { padding: 5rem 2rem; max-width: var(--max-width); margin: 0 auto; }
   font-style: italic;
   font-family: var(--font-serif);
   font-weight: 400;
-  color: var(--muted);
+  background: linear-gradient(90deg, #a99dfc, #5eead4);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 /* SKILLS */
@@ -330,13 +393,17 @@ section { padding: 5rem 2rem; max-width: var(--max-width); margin: 0 auto; }
   gap: 1rem;
 }
 .skill-group {
-  background: var(--bg2);
+  background: linear-gradient(150deg, var(--bg2), rgba(26,26,36,0.55));
   border: 0.5px solid var(--border);
   border-radius: 1rem;
   padding: 1.5rem;
-  transition: border-color 0.2s, transform 0.2s;
+  transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
 }
-.skill-group:hover { border-color: var(--border2); transform: translateY(-2px); }
+.skill-group:hover {
+  border-color: rgba(124,109,250,0.35);
+  transform: translateY(-3px);
+  box-shadow: 0 14px 40px rgba(0,0,0,0.35), 0 0 30px var(--glow-soft);
+}
 .skill-group-title {
   font-size: 0.7rem;
   font-family: var(--font-mono);
@@ -353,7 +420,9 @@ section { padding: 5rem 2rem; max-width: var(--max-width); margin: 0 auto; }
   border-radius: 0.375rem;
   border: 0.5px solid;
   font-weight: 300;
+  transition: transform 0.2s, filter 0.2s;
 }
+.tag:hover { transform: translateY(-1px); filter: brightness(1.2); }
 .tag.purple { background: rgba(124,109,250,0.1); border-color: rgba(124,109,250,0.25); color: #a99dfc; }
 .tag.teal { background: rgba(45,212,191,0.08); border-color: rgba(45,212,191,0.2); color: #5eead4; }
 .tag.orange { background: rgba(249,115,22,0.08); border-color: rgba(249,115,22,0.2); color: #fb923c; }
@@ -382,6 +451,7 @@ section { padding: 5rem 2rem; max-width: var(--max-width); margin: 0 auto; }
   border-radius: 50%;
   background: var(--accent);
   border: 2px solid var(--bg);
+  box-shadow: 0 0 0 3px rgba(124,109,250,0.15), 0 0 14px var(--glow);
 }
 .exp-header {
   display: flex;
@@ -453,11 +523,11 @@ section { padding: 5rem 2rem; max-width: var(--max-width); margin: 0 auto; }
   gap: 1.25rem;
 }
 .project-card {
-  background: var(--bg2);
+  background: linear-gradient(160deg, var(--bg2) 0%, rgba(15,15,22,0.85) 100%);
   border: 0.5px solid var(--border);
   border-radius: 1.25rem;
   padding: 1.75rem;
-  transition: all 0.25s;
+  transition: all 0.3s cubic-bezier(0.2, 0.7, 0.3, 1);
   position: relative;
   overflow: hidden;
   display: flex;
@@ -472,8 +542,57 @@ section { padding: 5rem 2rem; max-width: var(--max-width); margin: 0 auto; }
   opacity: 0;
   transition: opacity 0.25s;
 }
-.project-card:hover { border-color: var(--border2); transform: translateY(-3px); }
+.project-card:hover {
+  border-color: rgba(124,109,250,0.45);
+  transform: translateY(-5px);
+  box-shadow: 0 18px 50px rgba(0,0,0,0.45), 0 0 40px var(--glow-soft);
+}
 .project-card:hover::before { opacity: 1; }
+.project-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -80%;
+  width: 60%; height: 100%;
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,0.045), transparent);
+  transform: skewX(-18deg);
+  transition: left 0.6s ease;
+  pointer-events: none;
+}
+.project-card:hover::after { left: 130%; }
+
+/* Compact strip for the smaller repos */
+.more-projects {
+  margin-top: 2rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+}
+.more-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-right: 0.5rem;
+}
+.mini-link {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: rgba(240,238,232,0.75);
+  text-decoration: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 1rem;
+  border: 0.5px solid var(--border);
+  background: var(--bg2);
+  transition: all 0.2s;
+}
+.mini-link span { color: var(--muted); margin-left: 0.4rem; }
+.mini-link:hover {
+  border-color: rgba(124,109,250,0.5);
+  color: var(--text);
+  transform: translateY(-1px);
+}
 .project-badge {
   display: inline-flex;
   align-self: flex-start;
@@ -571,6 +690,11 @@ section { padding: 5rem 2rem; max-width: var(--max-width); margin: 0 auto; }
   display: flex; align-items: center; justify-content: center;
   font-size: 1.1rem;
   flex-shrink: 0;
+  transition: box-shadow 0.25s, transform 0.25s;
+}
+.contact-link:hover .contact-icon {
+  box-shadow: 0 0 18px var(--glow-soft);
+  transform: scale(1.06);
 }
 .contact-label { font-size: 0.7rem; color: var(--muted); margin-bottom: 0.15rem; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.06em; }
 .contact-val { font-size: 0.9rem; font-weight: 500; }
@@ -874,6 +998,85 @@ footer {
       </div>
     </div>
 
+    <div class="project-card reveal">
+      <span class="project-badge">Full-stack</span>
+      <div class="project-name">Watchlist Tracker</div>
+      <div class="project-desc">
+        Multi-user watchlist app with IMDb/TMDb integration for tracking movies and shows.
+        FastAPI + SQLAlchemy backend on PostgreSQL, Next.js/React frontend, and an Expo
+        React Native mobile client on the roadmap.
+      </div>
+      <div class="project-footer">
+        <div class="project-stack">
+          <span class="tag teal">FastAPI</span>
+          <span class="tag teal">Next.js</span>
+          <span class="tag orange">PostgreSQL</span>
+          <span class="tag gray">TMDb API</span>
+        </div>
+        <a href="https://github.com/rohil01/watchlist-db" target="_blank" class="project-link">View on GitHub ↗</a>
+      </div>
+    </div>
+
+    <div class="project-card reveal">
+      <div class="project-name">Library API</div>
+      <div class="project-desc">
+        RESTful book-catalog service built with FastAPI and SQLModel, backed by Neon serverless
+        Postgres. Layered router/service/model structure with route and service test coverage.
+      </div>
+      <div class="project-footer">
+        <div class="project-stack">
+          <span class="tag teal">FastAPI</span>
+          <span class="tag teal">SQLModel</span>
+          <span class="tag orange">Neon Postgres</span>
+        </div>
+        <a href="https://github.com/rohil01/Library-API-" target="_blank" class="project-link">View on GitHub ↗</a>
+      </div>
+    </div>
+
+    <div class="project-card reveal">
+      <div class="project-name">LegalLock — eVault System</div>
+      <div class="project-desc">
+        Blockchain-anchored document vault for legal records. Ethereum smart contracts (Solidity)
+        hash and timestamp documents for tamper-proof provenance, with a web frontend for uploads
+        and verification.
+      </div>
+      <div class="project-footer">
+        <div class="project-stack">
+          <span class="tag purple">Solidity</span>
+          <span class="tag teal">JavaScript</span>
+          <span class="tag gray">Ethereum</span>
+        </div>
+        <a href="https://github.com/rohil01/minor-legallock" target="_blank" class="project-link">View on GitHub ↗</a>
+      </div>
+    </div>
+
+    <div class="project-card reveal">
+      <div class="project-name">Decentralized Energy Sharing</div>
+      <div class="project-desc">
+        Peer-to-peer energy marketplace where Solidity smart contracts automate transactions and
+        settlement between producers and consumers, with a React dashboard for monitoring trades.
+      </div>
+      <div class="project-footer">
+        <div class="project-stack">
+          <span class="tag purple">Solidity</span>
+          <span class="tag teal">React</span>
+          <span class="tag gray">Web3</span>
+        </div>
+        <a href="https://github.com/rohil01/Decentralized-Energy-Sharing" target="_blank" class="project-link">View on GitHub ↗</a>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="more-projects">
+    <span class="more-label">More on GitHub</span>
+    <a class="mini-link" href="https://github.com/rohil01/FealtyX" target="_blank">FealtyX <span>Go</span></a>
+    <a class="mini-link" href="https://github.com/rohil01/chrome-extension" target="_blank">Chrome Extension <span>JS</span></a>
+    <a class="mini-link" href="https://github.com/rohil01/trucking-website" target="_blank">Trucking Website <span>React</span></a>
+    <a class="mini-link" href="https://github.com/rohil01/youtube-clone" target="_blank">YouTube Clone <span>HTML</span></a>
+    <a class="mini-link" href="https://github.com/rohil01/Rock-Paper-Scissors" target="_blank">Rock Paper Scissors <span>JS</span></a>
+    <a class="mini-link" href="https://github.com/rohil01/skills-agent-orchestration-build-your-ai-dream-team" target="_blank">Agent Orchestration <span>Exercise</span></a>
+    <a class="mini-link" href="https://github.com/rohil01?tab=repositories" target="_blank">All repos ↗</a>
   </div>
 </section>
 
